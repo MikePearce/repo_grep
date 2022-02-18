@@ -37,25 +37,19 @@ def main():
                     type=str
                     )
 
-
-
     # Get dem args
     args = parser.parse_args()
 
     # First, TOKEN
     TOKEN = None
+    Title = "### Public"
     if args.token is not None:
         TOKEN = args.token
     elif os.environ["GITHUB_TOKEN"] is not None:
         TOKEN = os.environ["GITHUB_TOKEN"]
     else:
-        print("Hey, you need a github token in an env var if you want the private repos too!")
-
-    if TOKEN is None:
-        Title = "### Public"
-    else:
         Title = "### Public and Private"
-
+        print("Hey, you need a github token in an env var if you want the private repos too!")
 
     # Use my access_token and create an object
     g = Github(TOKEN)
@@ -71,10 +65,10 @@ def main():
         except UnknownObjectException:
             exit("Error: org ["+ args.org +"] not recogised.")
         except:
-            exit("Unknown error connecting to GitHub API.")
+            exit("Unknown error connecting to GitHub API. Dost thou have internets?")
     else:
         search = g
-        print("Using personal repos")
+        print("No organisation select, grepping personal repos")
 
     # Oldest date
     duration_in_past = -abs(args.duration)
