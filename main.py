@@ -1,5 +1,5 @@
-import os, argparse
-from github import Github
+import os, argparse, sys
+from github import Github, BadCredentialsException, UnknownObjectException
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -8,35 +8,85 @@ def main():
 
     # Grab the args (or not)
     parser = argparse.ArgumentParser()
-    parser.parse_args()
+    parser.add_argument('-o', '--organisation',
+                    default=None,
+                    dest='org',
+                    help='Provide GitHub org name. Defaults to none.',
+                    type=str
+                    )
 
-    try:
-        TOKEN = None
-        # Get token (NO SECRETS HERE!)
+    parser.add_argument('-t', '--token',
+                    default=None,
+                    dest='token',
+                    help='Provide a GitHub token. Defaults to none.',
+                    type=str
+                    )
+
+    parser.add_argument('-d', '--duration',
+                    default=6,
+                    dest='duration',
+                    help='The number of minutes/weeks/months/years. Defaults to 6.',
+                    type=int
+                    )
+
+    parser.add_argument('-dt', '--durationtype',
+                    default="months",
+                    dest='duration_type',
+                    help='The type of duration: minutes|days|weeks|months|years. Defaults to months.',
+                    type=str
+                    )
+
+
+
+    # Get dem args
+    args = parser.parse_args()
+
+    # First, TOKEN
+    TOKEN = None
+    if args.token is not None:
+        TOKEN = args.token
+    elif os.environ["GITHUB_TOKEN"] is not None:
         TOKEN = os.environ["GITHUB_TOKEN"]
-        Title = "### Public and Private"
-    except KeyError:
-        Title = "### Public"
+    else:
         print("Hey, you need a github token in an env var if you want the private repos too!")
+
+    if TOKEN is None:
+        Title = "### Public"
+    else:
+        Title = "### Public and Private"
+
 
     # Use my access_token and create an object
     g = Github(TOKEN)
 
-    # Get the org object
-    org = g.get_organization("mytutorcode")
-    print("End")
-    exit()
+    # See if we've got an org (and the TOKEN can access it)
+    if args.org is not None:
+        try:
+            # Get the org object
+            search = g.get_organization(args.org)
+            print("Using org ["+ args.org +"]")
+        except BadCredentialsException:
+            exit("Error: token is not valid")
+        except UnknownObjectException:
+            exit("Error: org ["+ args.org +"] not recogised.")
+        except:
+            exit("Unknown error connecting to GitHub API.")
+    else:
+        search = g
+        print("Using personal repos")
 
     # Oldest date
-    months_in_past = -6
-    deadline = relativeTime("months",months_in_past,datetime.today())
+    duration_in_past = -abs(args.duration)
+    deadline = relativeTime(args.duration_type,duration_in_past,datetime.today())
 
     # Init empty dict
     old_repos = {}
     OK_repos = {}
+    empty_repos = {}
 
     # Find the repos
-    for repo in org.get_repos():
+    #for repo in search.get_repos():
+    for repo in progressbar(search.get_repos(), "Reticulating the Splines: ", 40):
         try:
             # Got to be a nicer way of doing this?
             last_commit = repo.get_commits()[0]
@@ -52,7 +102,7 @@ def main():
         except:
             print(repo.name, "is empty")
 
-    print(Title,"Repos older than", months_in_past, "months:", len(old_repos))
+    print(Title,"Repos older than", args.duration, args.duration_type, len(old_repos))
     for repoName, dict in old_repos.items():
         print (str(dict['last_commit']), "-", dict['owner'], "-", repoName)
 
@@ -60,6 +110,23 @@ def main():
 def relativeTime(time_thing, time_to_add, date_to_add_to):
     """ Add time (inc negative) to a date"""
     return date_to_add_to + relativedelta(**{time_thing:time_to_add})
+
+def progressbar(it, prefix="", size=60, file=sys.stdout):
+    """
+    Simple doodah to print a progress bar thanks to
+    https://stackoverflow.com/users/1207193/iambr
+    """
+    count = it.totalCount
+    def show(j):
+        x = int(size*j/count)
+        file.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count))
+        file.flush()
+    show(0)
+    for i, item in enumerate(it):
+        yield item
+        show(i+1)
+    file.write("\n")
+    file.flush()
 
 if __name__ == "__main__":
     main()
