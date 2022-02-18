@@ -11,7 +11,7 @@ Simply generate your github token, point it at your org and hooray!
 ## Usage
 
 ```
-usage: main.py [-h] [-o ORG] [-t TOKEN] [-d DURATION] [-dt DURATION_TYPE]
+usage: repogrep.py [-h] [-o ORG] [-t TOKEN] [-d DURATION] [-dt DURATION_TYPE]
 
 optional arguments:
   -h, --help            show this help message and exit

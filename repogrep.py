@@ -100,7 +100,7 @@ def main():
             commit = [repo.owner, "Archived" if repo.archived else "Active"]
             empty_repos.append(commit)
 
-    print(Title,"Repos older than", args.duration, args.duration_type, len(old_repos))
+    print(Title,"Repos older than", args.duration, args.duration_type, ":", len(old_repos))
     print(tabulate(old_repos, headers='firstrow', tablefmt='fancy_grid'))
 
     print("\n\nEmpty Repos")
