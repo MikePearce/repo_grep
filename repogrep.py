@@ -37,6 +37,13 @@ def main():
                     type=str
                     )
 
+    parser.add_argument('-a', '--archived',
+                    default=True,
+                    dest='show_archived',
+                    help='Whether or not to include archived repos. Defaults to True.',
+                    type=str
+                    )                    
+
     # Get dem args
     args = parser.parse_args()
 
@@ -80,6 +87,9 @@ def main():
 
     # Find the repos
     for repo in progressbar(search.get_repos(), "Reticulating the Splines: ", 40):
+
+        if repo.archived and args.show_archived is not True:
+            continue
 
         try:
             # Got to be a nicer way of doing this?
