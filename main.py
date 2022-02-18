@@ -1,10 +1,14 @@
-import os
+import os, argparse
 from github import Github
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 
 def main():
+
+    # Grab the args (or not)
+    parser = argparse.ArgumentParser()
+    parser.parse_args()
 
     try:
         TOKEN = None
@@ -20,6 +24,8 @@ def main():
 
     # Get the org object
     org = g.get_organization("mytutorcode")
+    print("End")
+    exit()
 
     # Oldest date
     months_in_past = -6
