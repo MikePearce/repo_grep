@@ -6,6 +6,6 @@ Simply generate your github token, point it at your org and hooray!
 
 ## Installation
 
-`pip install PyGithub python-dateutil`
+`pip install PyGithub python-dateutil tabulate`
 
 ## Usage

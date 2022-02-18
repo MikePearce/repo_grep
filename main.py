@@ -3,6 +3,7 @@ from github import Github, BadCredentialsException, UnknownObjectException
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from tabulate import tabulate
 
 def main():
 
@@ -79,32 +80,37 @@ def main():
     duration_in_past = -abs(args.duration)
     deadline = relativeTime(args.duration_type,duration_in_past,datetime.today())
 
-    # Init empty dict
-    old_repos = {}
-    OK_repos = {}
-    empty_repos = {}
+    # Init empty lists
+    old_repos = [['Repo Name', 'Last Commit', 'Committer', 'Status']]
+    empty_repos = [['Repo Name', 'Owner', 'Status']]
 
     # Find the repos
-    #for repo in search.get_repos():
     for repo in progressbar(search.get_repos(), "Reticulating the Splines: ", 40):
+
         try:
             # Got to be a nicer way of doing this?
             last_commit = repo.get_commits()[0]
             last_commit_date = last_commit.commit.author.date
             last_commit_author = last_commit.commit.author
-
             # If the last update was over
             if (last_commit_date < deadline):
 
-                commit = {repo.name: {'last_commit':last_commit_date, 'owner': last_commit_author.name}}
-                old_repos.update(commit)
-                #repo.get_readme
+                commit = [
+                        repo.name,
+                        last_commit_date,
+                        last_commit_author.name,
+                        "Archived" if repo.archived else "Active"
+                        ]
+                old_repos.append(commit)
         except:
-            print(repo.name, "is empty")
+            commit = [repo.owner, "Archived" if repo.archived else "Active"]
+            empty_repos.append(commit)
 
     print(Title,"Repos older than", args.duration, args.duration_type, len(old_repos))
-    for repoName, dict in old_repos.items():
-        print (str(dict['last_commit']), "-", dict['owner'], "-", repoName)
+    print(tabulate(old_repos, headers='firstrow', tablefmt='fancy_grid'))
+
+    print("\n\nEmpty Repos")
+    print(tabulate(empty_repos, headers='firstrow', tablefmt='fancy_grid'))
 
 
 def relativeTime(time_thing, time_to_add, date_to_add_to):
@@ -117,16 +123,17 @@ def progressbar(it, prefix="", size=60, file=sys.stdout):
     https://stackoverflow.com/users/1207193/iambr
     """
     count = it.totalCount
-    def show(j):
-        x = int(size*j/count)
-        file.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count))
+    if count > 0:
+        def show(j):
+            x = int(size*j/count)
+            file.write("%s[%s%s] %i/%i\r" % (prefix, "#"*x, "."*(size-x), j, count))
+            file.flush()
+        show(0)
+        for i, item in enumerate(it):
+            yield item
+            show(i+1)
+        file.write("\n")
         file.flush()
-    show(0)
-    for i, item in enumerate(it):
-        yield item
-        show(i+1)
-    file.write("\n")
-    file.flush()
 
 if __name__ == "__main__":
     main()
