@@ -1,3 +1,4 @@
+import os
 from github import Github
 from datetime import date
 from datetime import datetime
@@ -5,10 +6,14 @@ from dateutil.relativedelta import relativedelta
 
 def main():
 
-    # Get token (NO SECRETS HERE!)
-    TOKEN = None
-    with open("TOKEN.txt") as f:
-        TOKEN = f.read().strip()
+    try:
+        TOKEN = None
+        # Get token (NO SECRETS HERE!)
+        TOKEN = os.environ["GITHUB_TOKEN"]
+        Title = "### Public and Private"
+    except KeyError:
+        Title = "### Public"
+        print("Hey, you need a github token in an env var if you want the private repos too!")
 
     # Use my access_token and create an object
     g = Github(TOKEN)
@@ -41,7 +46,7 @@ def main():
         except:
             print(repo.name, "is empty")
 
-    print("### Repots older than", months_in_past, "months:", len(old_repos))
+    print(Title,"Repos older than", months_in_past, "months:", len(old_repos))
     for repoName, dict in old_repos.items():
         print (str(dict['last_commit']), "-", dict['owner'], "-", repoName)
 
