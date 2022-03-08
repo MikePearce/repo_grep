@@ -131,3 +131,6 @@ dmypy.json
 .pyre/
 
 TOKEN.txt
+
+.vs/
+.vs/slnx.sqlite
