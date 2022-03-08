@@ -24,3 +24,13 @@ optional arguments:
   -dt DURATION_TYPE, --durationtype DURATION_TYPE
                         The type of duration: minutes|days|weeks|months|years. Defaults to months.
 ```
+```
+sage: search_github.py [-h] [-o ORG] [-t TOKEN]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o ORG, --organisation ORG
+                        Provide GitHub org name. Defaults to none.
+  -t TOKEN, --token TOKEN
+                        Provide a GitHub token. Defaults to none. 
+```
