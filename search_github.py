@@ -1,5 +1,5 @@
 import os, argparse, sys
-from github import Github, BadCredentialsException, UnknownObjectException, GithubException
+from github import Github, BadCredentialsException, UnknownObjectException, GithubException, RateLimitExceededException
 from datetime import date
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
@@ -70,10 +70,15 @@ def main():
         
         # Get the keywords and construct the query
         keywords = input('Enter space separated key keyword(s)[e.g python flask postgres]: ')        
-        query = 'org:mytutorcode '+ keywords + ' in:file extension:yml'
+        query = 'org:'+ args.org +' '+ keywords + ' in:file extension:yml'
         
         print('Query is: ' + query)
-        result = g.search_code(query, order='desc')
+        try:
+            result = g.search_code(query, order='desc')
+        except RateLimitExceededException:
+            exit("Error: Looks like the secondary rate limit has been reached. Wait a few minutes, then try again")
+        except:
+            exit("Unknown error on search")            
 
         files_table_data = [['Repo Name', 'File Name', 'URL']]
 
@@ -88,7 +93,8 @@ def main():
             #print(file.repository.full_name, file.html_url)
         
         print(f'Found {result.totalCount} file(s)')
-        print(tabulate(files_table_data, headers='firstrow', tablefmt='fancy_grid'))
+        #print(tabulate(files_table_data, headers='firstrow', tablefmt='fancy_grid'))
+        print(tabulate(files_table_data, headers='firstrow', tablefmt='github'))
 
 def progressbar(it, prefix="", size=60, file=sys.stdout):
     """
